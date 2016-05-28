@@ -1,201 +1,88 @@
 package com.tec.accio.app;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
+import java.util.Iterator;
+
+import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.document.StringField;
-import org.apache.lucene.document.TextField;
-import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.queryParser.ParseException;
+import org.apache.lucene.queryParser.QueryParser;
+import org.apache.lucene.search.Hit;
+import org.apache.lucene.search.Hits;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.TopScoreDocCollector;
+import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.util.Version;
+import org.apache.lucene.store.LockObtainFailedException;
 
-import java.io.*;
-import java.util.ArrayList;
+public class TextFileIndexer{
 
-/**
- * This terminal application creates an Apache Lucene index in a folder and adds files into this index
- * based on the input of the user.
- */
-public class TextFileIndexer {
-  private static StandardAnalyzer analyzer = new StandardAnalyzer(Version.LUCENE_40);
+  public static final String FILES_TO_INDEX_DIRECTORY = "filesToIndex";
+  public static final String INDEX_DIRECTORY = "indexDirectory";
 
-  private IndexWriter writer;
-  private ArrayList<File> queue = new ArrayList<File>();
+  public static final String FIELD_PATH = "path";
+  public static final String FIELD_CONTENTS = "contents";
 
+  public static void main(String[] args) throws Exception {
 
-  public static void main(String[] args) throws IOException {
-    System.out.println("Enter the path where the index will be created: (e.g. /tmp/index or c:\\temp\\index)");
+    createIndex();
+    searchIndex("quack");
+    searchIndex("potato");
+    searchIndex("quack AND potato");
+    searchIndex("quack and potato");
+    searchIndex("potato OR quack");
 
-    String indexLocation = null;
-    BufferedReader br = new BufferedReader(
-            new InputStreamReader(System.in));
-    String s = br.readLine();
+  }
 
-    TextFileIndexer indexer = null;
-    try {
-      indexLocation = s;
-      indexer = new TextFileIndexer(s);
-    } catch (Exception ex) {
-      System.out.println("Cannot create index..." + ex.getMessage());
-      System.exit(-1);
+  public static void createIndex() throws CorruptIndexException, LockObtainFailedException, IOException {
+    Analyzer analyzer = new StandardAnalyzer();
+    boolean recreateIndexIfExists = true;
+    IndexWriter indexWriter = new IndexWriter(INDEX_DIRECTORY, analyzer, recreateIndexIfExists);
+    File dir = new File(FILES_TO_INDEX_DIRECTORY);
+    File[] files = dir.listFiles();
+    for (File file : files) {
+      Document document = new Document();
+
+      String path = file.getCanonicalPath();
+      document.add(new Field(FIELD_PATH, path, Field.Store.YES, Field.Index.UN_TOKENIZED));
+
+      Reader reader = new FileReader(file);
+      document.add(new Field(FIELD_CONTENTS, reader));
+
+      indexWriter.addDocument(document);
     }
+    indexWriter.optimize();
+    indexWriter.close();
+  }
 
-    //===================================================
-    //read input from user until he enters q for quit
-    //===================================================
-    while (!s.equalsIgnoreCase("q")) {
-      try {
-        System.out.println("Enter the full path to add into the index (q=quit): (e.g. /home/ron/mydir or c:\\Users\\ron\\mydir)");
-        System.out.println("[Acceptable file types: .xml, .html, .html, .txt]");
-        s = br.readLine();
-        if (s.equalsIgnoreCase("q")) {
-          break;
-        }
+  public static void searchIndex(String searchString) throws IOException, ParseException {
+    System.out.println("Searching for '" + searchString + "'");
+    Directory directory = FSDirectory.getDirectory(INDEX_DIRECTORY);
+    IndexReader indexReader = IndexReader.open(directory);
+    IndexSearcher indexSearcher = new IndexSearcher(indexReader);
 
-        //try to add file into the index
-        indexer.indexFileOrDirectory(s);
-      } catch (Exception e) {
-        System.out.println("Error indexing " + s + " : " + e.getMessage());
-      }
-    }
+    Analyzer analyzer = new StandardAnalyzer();
+    QueryParser queryParser = new QueryParser(FIELD_CONTENTS, analyzer);
+    Query query = queryParser.parse(searchString);
+    Hits hits = indexSearcher.search(query);
+    System.out.println("Number of hits: " + hits.length());
 
-    //===================================================
-    //after adding, we always have to call the
-    //closeIndex, otherwise the index is not created    
-    //===================================================
-    indexer.closeIndex();
-
-    //=========================================================
-    // Now search
-    //=========================================================
-    IndexReader reader = DirectoryReader.open(FSDirectory.open(new File(indexLocation)));
-    IndexSearcher searcher = new IndexSearcher(reader);
-    TopScoreDocCollector collector = TopScoreDocCollector.create(5, true);
-
-    s = "";
-    while (!s.equalsIgnoreCase("q")) {
-      try {
-        System.out.println("Enter the search query (q=quit):");
-        s = br.readLine();
-        if (s.equalsIgnoreCase("q")) {
-          break;
-        }
-        Query q = new QueryParser(Version.LUCENE_40, "contents", analyzer).parse(s);
-        searcher.search(q, collector);
-        ScoreDoc[] hits = collector.topDocs().scoreDocs;
-
-        // 4. display results
-        System.out.println("Found " + hits.length + " hits.");
-        for(int i=0;i<hits.length;++i) {
-          int docId = hits[i].doc;
-          Document d = searcher.doc(docId);
-          System.out.println((i + 1) + ". " + d.get("path") + " score=" + hits[i].score);
-        }
-
-      } catch (Exception e) {
-        System.out.println("Error searching " + s + " : " + e.getMessage());
-      }
+    Iterator<Hit> it = hits.iterator();
+    while (it.hasNext()) {
+      Hit hit = it.next();
+      Document document = hit.getDocument();
+      String path = document.get(FIELD_PATH);
+      System.out.println("Hit: " + path);
     }
 
   }
 
-  /**
-   * Constructor
-   * @param indexDir the name of the folder in which the index should be created
-   * @throws java.io.IOException when exception creating index.
-   */
-  TextFileIndexer(String indexDir) throws IOException {
-    // the boolean true parameter means to create a new index everytime, 
-    // potentially overwriting any existing files there.
-    FSDirectory dir = FSDirectory.open(new File(indexDir));
-
-
-    IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_40, analyzer);
-
-    writer = new IndexWriter(dir, config);
-  }
-
-  /**
-   * Indexes a file or directory
-   * @param fileName the name of a text file or a folder we wish to add to the index
-   * @throws java.io.IOException when exception
-   */
-  public void indexFileOrDirectory(String fileName) throws IOException {
-    //===================================================
-    //gets the list of files in a folder (if user has submitted
-    //the name of a folder) or gets a single file name (is user
-    //has submitted only the file name) 
-    //===================================================
-    addFiles(new File(fileName));
-    
-    int originalNumDocs = writer.numDocs();
-    for (File f : queue) {
-      FileReader fr = null;
-      try {
-        Document doc = new Document();
-
-        //===================================================
-        // add contents of file
-        //===================================================
-        fr = new FileReader(f);
-        doc.add(new TextField("contents", fr));
-        doc.add(new StringField("path", f.getPath(), Field.Store.YES));
-        doc.add(new StringField("filename", f.getName(), Field.Store.YES));
-
-        writer.addDocument(doc);
-        System.out.println("Added: " + f);
-      } catch (Exception e) {
-        System.out.println("Could not add: " + f);
-      } finally {
-        fr.close();
-      }
-    }
-    
-    int newNumDocs = writer.numDocs();
-    System.out.println("");
-    System.out.println("************************");
-    System.out.println((newNumDocs - originalNumDocs) + " documents added.");
-    System.out.println("************************");
-
-    queue.clear();
-  }
-
-  private void addFiles(File file) {
-
-    if (!file.exists()) {
-      System.out.println(file + " does not exist.");
-    }
-    if (file.isDirectory()) {
-      for (File f : file.listFiles()) {
-        addFiles(f);
-      }
-    } else {
-      String filename = file.getName().toLowerCase();
-      //===================================================
-      // Only index text files
-      //===================================================
-      if (filename.endsWith(".htm") || filename.endsWith(".html") || 
-              filename.endsWith(".xml") || filename.endsWith(".txt")) {
-        queue.add(file);
-      } else {
-        System.out.println("Skipped " + filename);
-      }
-    }
-  }
-
-  /**
-   * Close the index.
-   * @throws java.io.IOException when exception closing
-   */
-  public void closeIndex() throws IOException {
-    writer.close();
-  }
 }
