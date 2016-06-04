@@ -1,10 +1,6 @@
 package com.tec.accio.app;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.Reader;
-import java.util.Iterator;
+
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -23,6 +19,13 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.LockObtainFailedException;
 
+
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
+import java.util.Iterator;
+
 public class TextFileIndexer{
 
   public static final String FILES_TO_INDEX_DIRECTORY = "filesToIndex";
@@ -31,7 +34,9 @@ public class TextFileIndexer{
   public static final String FIELD_PATH = "path";
   public static final String FIELD_CONTENTS = "contents";
 
-  public static void main(String[] args) throws Exception {
+
+
+ /* public static void main(String[] args) throws Exception {
 
     createIndex();
     searchIndex("quack");
@@ -40,7 +45,7 @@ public class TextFileIndexer{
     searchIndex("quack and potato");
     searchIndex("potato OR quack");
 
-  }
+  }*/
 
   public static void createIndex() throws CorruptIndexException, LockObtainFailedException, IOException {
     Analyzer analyzer = new StandardAnalyzer();
