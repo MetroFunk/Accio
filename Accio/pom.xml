@@ -13,11 +13,39 @@
         <properties>
             <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         </properties>
+
+        <parent>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-parent</artifactId>
+            <version>1.3.5.RELEASE</version>
+        </parent>
+
+
         <dependencies>
+
             <dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-context</artifactId>
                 <version>4.2.6.RELEASE</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.tomcat.embed</groupId>
+                <artifactId>tomcat-embed-jasper</artifactId>
+                <scope>required</scope>
+            </dependency>
+
+            <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>webjars-locator</artifactId>
+            <version>0.1</version>
+        </dependency>
+
+
+
+            <dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>jstl</artifactId>
             </dependency>
             <dependency>
                 <groupId>org.apache.lucene</groupId>
@@ -29,9 +57,65 @@
                 <artifactId>lucene-snowball</artifactId>
                 <version>3.0.3</version>
             </dependency>
+
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-webmvc</artifactId>
+                <version>4.2.6.RELEASE</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-web</artifactId>
+                <version>4.2.6.RELEASE</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-web</artifactId>
+            </dependency>
+
+            <dependency>
+                <groupId>org.webjars</groupId>
+                <artifactId>jquery</artifactId>
+                <version>2.1.1</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.webjars</groupId>
+                <artifactId>bootstrap</artifactId>
+                <version>3.2.0</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.webjars</groupId>
+                        <artifactId>jquery</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+
+
+
+
+
+
         </dependencies>
         <build>
             <plugins>
+
+
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <configuration>
+                        <useSystemClassLoader>false</useSystemClassLoader>
+                    </configuration>
+                </plugin>
+
                 <plugin><groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>
                     <version>2.6</version>
@@ -76,6 +160,17 @@
                         <target>1.7</target>
                     </configuration>
                 </plugin>
+
+                <!-- For Maven Tomcat Plugin -->
+                <plugin>
+                    <groupId>org.apache.tomcat.maven</groupId>
+                    <artifactId>tomcat7-maven-plugin</artifactId>
+                    <version>2.2</version>
+                    <configuration>
+                        <path>/Accio</path>
+                    </configuration>
+                </plugin>
+
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-dependency-plugin</artifactId>

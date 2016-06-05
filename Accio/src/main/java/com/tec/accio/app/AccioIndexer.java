@@ -67,18 +67,18 @@ public class AccioIndexer {
             System.out.println("");
         }
     }
-
+ /*
     public static void main(String[] args) {
         try {
             AccioIndexer idx = new AccioIndexer();
-            idx.indexFile(new File("/home/metrofunko/Desktop/Compiladores-FunctionalCare/Accio/filesToIndex/quack.txt"));
+            idx.indexFile(new File("/home/zeru/IdeaProjects/Accio/Accio/filesToIndex/quack.txt"));
 
-            idx.search(Arrays.asList("/home/metrofunko/Desktop/Compiladores-FunctionalCare/Accio/filesToIndex/quack.txt".split(",")));
+            idx.search(Arrays.asList("/home/zeru/IdeaProjects/Accio/Accio/filesToIndex/quack.txt".split(",")));
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
+*/
     private class Tuple {
         private int fileno;
         private int position;
