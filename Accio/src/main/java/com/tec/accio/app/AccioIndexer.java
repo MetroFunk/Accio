@@ -14,10 +14,11 @@ public class AccioIndexer {
     private HashMap<String, Double> term_frequency_in_collection = new HashMap<String, Double>();
     private HashMap<String, HashMap<Integer, Double>> term_frequency_in_files = new HashMap<String, HashMap<Integer, Double>>();
     private Vector<String> documents_array=new Vector<String>();
-    private Vector<String> list_of_terms = new Vector<String>();
+    private Vector<String> list_of_terms = new Vector<>();
+    private Vector<String> documents_names=new Vector<>();
+    public HashMap<String, Map<String, Double>> index = new HashMap<String, Map<String, Double>>();
 
-
-    public double[][] matrix;
+    private double[][] matrix;
 
     public String readOneFile(File f){
         StringBuffer page=new StringBuffer();
@@ -40,10 +41,11 @@ public class AccioIndexer {
 
             File f=new File(dir);
             File files[]=f.listFiles();
-            System.out.println("Reading"+files.length+" files");
+            System.out.println("Reading "+files.length+" files");
             String line=" ";
             for(File filePath: files){
                 String fileContent = readOneFile(filePath);
+                documents_names.add(filePath.toString());
                 documents_array.add(fileContent);
             }
 
@@ -64,26 +66,29 @@ public class AccioIndexer {
             String terms[]=tokenize(page);
 
             for(int j=0;j<terms.length;j++){
-                if(terms[j].isEmpty())continue;
 
+                if(terms[j].isEmpty())continue;
                 double val=1;
-                if(term_frequency_in_collection.get(terms[j])!=null)
-                    val = val+term_frequency_in_collection.get(terms[j]);
+                if(term_frequency_in_collection.get(terms[j])!=null){
+                    val = val+term_frequency_in_collection.get(terms[j]);}
                 term_frequency_in_collection.put(terms[j], val);
 
                 double val2=1;
                 HashMap<Integer, Double> tempInner = new HashMap<Integer, Double>();
-                if(term_frequency_in_files.get(terms[j])!=null)
+                if(term_frequency_in_files.get(terms[j])!=null){
                     tempInner = term_frequency_in_files.get(terms[j]);
+                }
 
-                if(tempInner.get(i)!=null)
+                if(tempInner.get(i)!=null){
                     val2 = val2+tempInner.get(i);
+                }
 
                 tempInner.put(i, val2);
                 term_frequency_in_files.put(terms[j], tempInner);
             }
         }
         list_of_terms.addAll(term_frequency_in_collection.keySet());
+
         System.out.println(term_frequency_in_collection);
     }
 
@@ -93,43 +98,43 @@ public class AccioIndexer {
         for(int i=0;i<documents_array.size();i++){
             String page=documents_array.get(i).toLowerCase();
             String terms[]=tokenize(page);
-
             double maxTfThisDoc=-1.0;
             for(int j=0;j<terms.length;j++){
-                if(terms[j].isEmpty())continue;
+                if(terms[j].isEmpty()){
+                    continue;
+                }
 
                 int ti = list_of_terms.indexOf(terms[j]);
+
                 matrix[i][ti]++;
 
-                if(matrix[i][ti]>=maxTfThisDoc)
+                if(matrix[i][ti]>=maxTfThisDoc){
+
                     maxTfThisDoc = matrix[i][ti];
-            }
-            for(int j=0;j<terms.length;j++){
-                if(terms[j].isEmpty())continue;
-
-                int ti = list_of_terms.indexOf(terms[j]);
-                matrix[i][ti] = matrix[i][ti]/(maxTfThisDoc*terms.length);
-
+                }
                 double numdocuments_arrayWithTerm= (double)term_frequency_in_files.get(terms[j]).size();
                 double DF = (double)documents_array.size() / numdocuments_arrayWithTerm;
 
-                matrix[i][ti] = matrix[i][ti] * Math.log(1 + DF);
+                matrix[i][ti] = (Math.log(1 + DF)/Math.log(2)) * (1 + Math.log(matrix[i][ti])/Math.log(2)) ;
+                if(index.containsKey(terms[j])){
+                    index.get(terms[j]).put(documents_names.get(i),matrix[i][ti]);
+                }
+                else{
+                    HashMap<String, Double> node = new HashMap<>();
+                    node.put(documents_names.get(i),matrix[i][ti]);
+                    index.put(terms[j],node);}
+
             }
         }
 
     }
-    public void printMatrix(){
-        for(int j=0;j<list_of_terms.size();j++){
-            System.out.print("  "+list_of_terms.get(j));
-        }
-        System.out.println();
-        for(int i=0;i<documents_array.size();i++){
-            System.out.print(i);
-            for(int j=0;j<list_of_terms.size();j++){
-                System.out.print(" "+matrix[i][j]);
-            }
-            System.out.println();
-        }
+
+    public void create_binary_file() throws IOException {
+        ObjectOutputStream myStream = new ObjectOutputStream(new FileOutputStream("index.bin"));
+        myStream.writeObject(index);
+        myStream.close();
     }
+
+
 
 }
