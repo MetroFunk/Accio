@@ -17,7 +17,7 @@ public class AccioIndexer {
     private Vector<String> list_of_terms = new Vector<>();
     private Vector<String> documents_names=new Vector<>();
     public HashMap<String, Map<String, Double>> index = new HashMap<String, Map<String, Double>>();
-    public HashMap<String, Map<String, Double>> index_idf = new HashMap<String, Map<String, Double>>();
+    public HashMap<String, Double> index_idf = new HashMap<String, Double>();
 
     private double[][] matrix;
 
@@ -122,16 +122,14 @@ public class AccioIndexer {
 
                 if(index.containsKey(terms[j])){
                     index.get(terms[j]).put(documents_names.get(i),matrix[i][ti]);
-                    index_idf.get(terms[j]).put(documents_names.get(i), (matrix[i][ti]) /((1 + Math.log(matrix[i][ti]) / Math.log(2))));
                 }
                 else{
                     HashMap<String, Double> node = new HashMap<>();
-                    HashMap<String, Double> node_idf = new HashMap<>();
-                    node_idf.put( (documents_names.get(i)), (matrix[i][ti])/((1 + Math.log(matrix[i][ti]) / Math.log(2))));
-                    index_idf.put(terms[j],node_idf);
                     node.put(documents_names.get(i),matrix[i][ti]);
                     index.put(terms[j],node);
                 }
+
+                index_idf.put(terms[j], (matrix[i][ti])/((1 + Math.log(matrix[i][ti]) / Math.log(2))));
 
             }
         }
