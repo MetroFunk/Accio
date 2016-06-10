@@ -17,10 +17,13 @@ public class AccioIndexer {
     private Vector<String> list_of_terms = new Vector<>();
     private Vector<String> documents_names=new Vector<>();
     public HashMap<String, Map<String, Double>> index = new HashMap<String, Map<String, Double>>();
+    public HashMap<String, Map<String, Double>> index_idf = new HashMap<String, Map<String, Double>>();
 
     private double[][] matrix;
 
+
     public String readOneFile(File f){
+
         StringBuffer page=new StringBuffer();
         try{
             BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(f)));
@@ -89,7 +92,7 @@ public class AccioIndexer {
         }
         list_of_terms.addAll(term_frequency_in_collection.keySet());
 
-        System.out.println(term_frequency_in_collection);
+
     }
 
     public  void matrix_generator(){
@@ -116,22 +119,28 @@ public class AccioIndexer {
                 double DF = (double)documents_array.size() / numdocuments_arrayWithTerm;
 
                 matrix[i][ti] = (Math.log(1 + DF)/Math.log(2)) * (1 + Math.log(matrix[i][ti])/Math.log(2)) ;
+
                 if(index.containsKey(terms[j])){
                     index.get(terms[j]).put(documents_names.get(i),matrix[i][ti]);
+                    index_idf.get(terms[j]).put(documents_names.get(i), (matrix[i][ti]) /((1 + Math.log(matrix[i][ti]) / Math.log(2))));
                 }
                 else{
                     HashMap<String, Double> node = new HashMap<>();
+                    HashMap<String, Double> node_idf = new HashMap<>();
+                    node_idf.put( (documents_names.get(i)), (matrix[i][ti])/((1 + Math.log(matrix[i][ti]) / Math.log(2))));
+                    index_idf.put(terms[j],node_idf);
                     node.put(documents_names.get(i),matrix[i][ti]);
-                    index.put(terms[j],node);}
+                    index.put(terms[j],node);
+                }
 
             }
         }
 
     }
 
-    public void create_binary_file() throws IOException {
+    public void create_binary_file(HashMap map) throws IOException {
         ObjectOutputStream myStream = new ObjectOutputStream(new FileOutputStream("index.bin"));
-        myStream.writeObject(index);
+        myStream.writeObject(map);
         myStream.close();
     }
 
