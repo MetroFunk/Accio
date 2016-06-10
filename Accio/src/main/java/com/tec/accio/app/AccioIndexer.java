@@ -138,10 +138,13 @@ public class AccioIndexer {
 
     }
 
-    public void create_binary_file(HashMap map) throws IOException {
+    public void create_binary_file() throws IOException {
         ObjectOutputStream myStream = new ObjectOutputStream(new FileOutputStream("index.bin"));
-        myStream.writeObject(map);
+        myStream.writeObject(index);
         myStream.close();
+        ObjectOutputStream myStream2 = new ObjectOutputStream(new FileOutputStream("index_idf.bin"));
+        myStream2.writeObject(index_idf);
+        myStream2.close();
     }
 
 
