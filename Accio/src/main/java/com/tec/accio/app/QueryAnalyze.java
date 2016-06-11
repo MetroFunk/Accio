@@ -4,12 +4,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.tartarus.snowball.SnowballProgram;
 import org.tartarus.snowball.ext.SpanishStemmer;
@@ -145,6 +140,33 @@ public class QueryAnalyze {
 	 */
 	}
 
+
+	private static LinkedHashMap<String, Double> sortHashMapByValues(HashMap<String, Double> passedMap) {
+		List<String> mapKeys = new ArrayList<>(passedMap.keySet());
+		List<Double> mapValues = new ArrayList<>(passedMap.values());
+		Collections.sort(mapValues);
+		Collections.sort(mapKeys);
+		LinkedHashMap<String, Double> sortedMap = new LinkedHashMap<>();
+		Iterator<Double> valueIt = mapValues.iterator();
+		while (valueIt.hasNext()) {
+			Double val = valueIt.next();
+			Iterator<String> keyIt = mapKeys.iterator();
+			while (keyIt.hasNext()) {
+				String key = keyIt.next();
+				Double comp1 = passedMap.get(key);
+				Double comp2 = val;
+				if (comp1.equals(comp2)) {
+					keyIt.remove();
+					sortedMap.put(key, val);
+					break;
+				}
+			}
+		}
+		return sortedMap;
+	}
+
+
+
 	
 	public static void main (String args[]) throws FileNotFoundException, ClassNotFoundException, IOException{
 		QueryAnalyze a = new QueryAnalyze();
@@ -154,6 +176,7 @@ public class QueryAnalyze {
 		a.generate_matrix();
 		a.printMatrix();
 		a.generate_sim();
+		sortHashMapByValues(a.sim);
 		System.out.println(a.sim);
 		
 	}
