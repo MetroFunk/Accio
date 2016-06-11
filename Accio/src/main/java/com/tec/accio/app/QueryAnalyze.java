@@ -109,8 +109,13 @@ public class QueryAnalyze {
 				root += temp2;
 			}
 			root = Math.sqrt(root);
-			res = (num / (queryRoot * root) );
-			sim.put(currentFile, res);
+			if (queryRoot == 0 || root ==0 ){
+				sim.put(currentFile, 0.0);
+			}
+			else{
+				res = (num / (queryRoot * root) );
+				sim.put(currentFile, res);
+			}
 		}	
 	}
 
@@ -177,6 +182,7 @@ public class QueryAnalyze {
 		a.generate_sim();
 		System.out.print(sortHashMapByValues(a.sim));
 		//System.out.println(a.sim);
+
 		
 	}
 }
