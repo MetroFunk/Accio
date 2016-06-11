@@ -1,0 +1,1 @@
+function query() { alert('You clicked the top text');}

@@ -20,7 +20,10 @@ public class BaseController {
 
     }
 
-
-
+    @RequestMapping("/query")
+    public String query(String myQuery) {
+        System.out.println(myQuery);
+        return myQuery;
+    }
 
 }

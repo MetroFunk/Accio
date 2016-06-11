@@ -182,7 +182,5 @@ public class QueryAnalyze {
 		a.generate_sim();
 		System.out.print(sortHashMapByValues(a.sim));
 		//System.out.println(a.sim);
-
-		
 	}
 }

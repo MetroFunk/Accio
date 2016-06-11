@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="en"><head>
 
+
+
+<script type="text/javascript" src="js/script.js"></script>
+
+
+</script>
+
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -16,6 +23,7 @@
             <link rel='stylesheet' href='<%= org.webjars.AssetLocator.getWebJarPath("bootstrap.css") %>'>
             <link rel='stylesheet' href='<%= org.webjars.AssetLocator.getWebJarPath("ie10-viewport-bug-workaround.css") %>'>
             <link rel='stylesheet' href='<%= org.webjars.AssetLocator.getWebJarPath("starter-template.css") %>'>
+
 
   </head>
 
@@ -39,12 +47,12 @@
 
     <div class="container">
         <div class="row">
-            <center><h2>Le Quack Accio Searcher<h2></center>
+            <center><h2>Le Quack Accio Searcher</h2></center>
             <div id="custom-search-input">
                 <div class="input-group col-md-12">
-                    <input type="text" class="  search-query form-control" placeholder="Search" />
+                    <input type="text" class="  search-query form-control" placeholder="Search" id = 'value'/>
                                 <span class="input-group-btn">
-                                    <button class="btn btn-danger" type="button">
+                                    <button class="btn btn-danger" type="button" onClick="query();">
                                         <span class=" glyphicon glyphicon-search"></span>
                                     </button>
                                 </span>
@@ -53,13 +61,10 @@
         </div>
     </div>
 
-
-    <!-- Bootstrap core JavaScript
-    ================================================== -->
-  <link rel='stylesheet' href='<%= org.webjars.AssetLocator.getWebJarPath("bootstrap/bootstrap.min.css") %>'>
+ <link rel='stylesheet' href='<%= org.webjars.AssetLocator.getWebJarPath("bootstrap/bootstrap.min.css") %>'>
   <link rel='stylesheet' href='<%= org.webjars.AssetLocator.getWebJarPath("css/bootstrap-theme.min.css") %>'>
-  <script type='text/javascript' src='<%= org.webjars.AssetLocator.getWebJarPath("jquery.min.js") %>'></script>
+ <script type='text/javascript' src='<%= org.webjars.AssetLocator.getWebJarPath("jquery.min.js") %>'></script>
   <script type='text/javascript' src='<%= org.webjars.AssetLocator.getWebJarPath("js/bootstrap.min.js") %>'></script>
 
-
 </body></html>
+
