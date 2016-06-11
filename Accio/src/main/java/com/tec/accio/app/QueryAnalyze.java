@@ -144,8 +144,8 @@ public class QueryAnalyze {
 	private static LinkedHashMap<String, Double> sortHashMapByValues(HashMap<String, Double> passedMap) {
 		List<String> mapKeys = new ArrayList<>(passedMap.keySet());
 		List<Double> mapValues = new ArrayList<>(passedMap.values());
-		Collections.sort(mapValues);
-		Collections.sort(mapKeys);
+		Collections.sort(mapValues,Collections.<Double>reverseOrder());
+		Collections.sort(mapKeys, Collections.<String>reverseOrder());
 		LinkedHashMap<String, Double> sortedMap = new LinkedHashMap<>();
 		Iterator<Double> valueIt = mapValues.iterator();
 		while (valueIt.hasNext()) {
@@ -166,7 +166,6 @@ public class QueryAnalyze {
 	}
 
 
-
 	
 	public static void main (String args[]) throws FileNotFoundException, ClassNotFoundException, IOException{
 		QueryAnalyze a = new QueryAnalyze();
@@ -176,8 +175,8 @@ public class QueryAnalyze {
 		a.generate_matrix();
 		a.printMatrix();
 		a.generate_sim();
-		sortHashMapByValues(a.sim);
-		System.out.println(a.sim);
+		System.out.print(sortHashMapByValues(a.sim));
+		//System.out.println(a.sim);
 		
 	}
 }
