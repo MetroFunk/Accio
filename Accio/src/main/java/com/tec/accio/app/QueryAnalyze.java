@@ -237,10 +237,6 @@ public class QueryAnalyze {
 			result.add(it.getKey());
 		}
 
-		for (String i : result){
-			System.out.print(i);
-		}
-
 		return result;
 	}
 	/*

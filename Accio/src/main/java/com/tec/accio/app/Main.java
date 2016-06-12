@@ -14,5 +14,8 @@ public class Main {
         accio.frequency_generator();
         accio.matrix_generator();
         accio.create_binary_file();
+        TextFileIndexer a = new TextFileIndexer();
+        a.createIndex();
+        a.create_binary_file();
     }
 }

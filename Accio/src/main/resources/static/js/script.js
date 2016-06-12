@@ -1,21 +1,40 @@
-function query(){
+function queryAccio(){
  var myQuery = document.getElementById('value').value;
 
  $.ajax({
-                         type:"GET",
-                         contentType : "application/json",
-                         url: "/query",
-                         dataType : 'json',
-                         data: {"myQuery": myQuery},
-                         success: function (data) {
-                               alert("yay");
-                               alert(data);
-                         },
-                         error: function (data) {
-                               alert("oops");
-                               alert(data);
-                         }
-                     });
+            type:"GET",
+            url: "/queryAccio",
+            data: {"myQuery": myQuery},
+            success: function (data) {
+
+            var res = "";
+            jQuery.each(data, function(index, value){
+            res += "<div>" + value + "<\div>"
+            });
+             document.getElementById("queries").innerHTML = res;
+            },
+            error: function (data) {
+            }
+      });
+}
 
 
+function queryLucene(){
+ var myQuery = document.getElementById('value').value;
+
+ $.ajax({
+            type:"GET",
+            url: "/queryLucene",
+            data: {"myQuery": myQuery},
+            success: function (data) {
+
+            var res = "";
+            jQuery.each(data, function(index, value){
+            res += "<div>" + value + "<\div>"
+            });
+             document.getElementById("queries").innerHTML = res;
+            },
+            error: function (data) {
+            }
+      });
 }

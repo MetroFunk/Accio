@@ -52,12 +52,25 @@
                 <div class="input-group col-md-12">
                     <input type="text" class="  search-query form-control" placeholder="Search" id = 'value'/>
                                 <span class="input-group-btn">
-                                    <button class="btn btn-danger" type="button" onClick="query();">
-                                        <span class=" glyphicon glyphicon-search"></span>
+                                    <button class="btn btn-primary" type="button" onClick="queryAccio();">
+                                        Accio
                                     </button>
                                 </span>
+
+                                <span class="input-group-btn">
+                                      <button class="btn btn-success" type="button" onClick="queryLucene();">
+                                          Lucene
+                                       </button>
+                                </span>
+
+
                 </div>
+
+
             </div>
+            <h2 id="queries"> </h2>
+
+
         </div>
     </div>
 
