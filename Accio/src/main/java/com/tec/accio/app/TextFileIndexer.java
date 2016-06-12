@@ -20,34 +20,22 @@ import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.LockObtainFailedException;
 
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.Reader;
+import java.io.*;
 import java.util.Iterator;
 
-public class TextFileIndexer{
+public class TextFileIndexer implements Serializable {
 
-  public static final String FILES_TO_INDEX_DIRECTORY = "filesToIndex";
-  public static final String INDEX_DIRECTORY = "indexDirectory";
+  public  String FILES_TO_INDEX_DIRECTORY = "filesToIndex";
+  public  String INDEX_DIRECTORY = "indexDirectory";
 
-  public static final String FIELD_PATH = "path";
-  public static final String FIELD_CONTENTS = "contents";
+  public  String FIELD_PATH = "path";
+  public  String FIELD_CONTENTS = "contents";
 
 
 
- /* public static void main(String[] args) throws Exception {
 
-    createIndex();
-    searchIndex("quack");
-    searchIndex("potato");
-    searchIndex("quack AND potato");
-    searchIndex("quack and potato");
-    searchIndex("potato OR quack");
 
-  }*/
-
-  public static void createIndex() throws CorruptIndexException, LockObtainFailedException, IOException {
+  public  void createIndex() throws CorruptIndexException, LockObtainFailedException, IOException {
     Analyzer analyzer = new StandardAnalyzer();
     boolean recreateIndexIfExists = true;
     IndexWriter indexWriter = new IndexWriter(INDEX_DIRECTORY, analyzer, recreateIndexIfExists);
@@ -68,26 +56,21 @@ public class TextFileIndexer{
     indexWriter.close();
   }
 
-  public static void searchIndex(String searchString) throws IOException, ParseException {
-    System.out.println("Searching for '" + searchString + "'");
-    Directory directory = FSDirectory.getDirectory(INDEX_DIRECTORY);
-    IndexReader indexReader = IndexReader.open(directory);
-    IndexSearcher indexSearcher = new IndexSearcher(indexReader);
-
-    Analyzer analyzer = new StandardAnalyzer();
-    QueryParser queryParser = new QueryParser(FIELD_CONTENTS, analyzer);
-    Query query = queryParser.parse(searchString);
-    Hits hits = indexSearcher.search(query);
-    System.out.println("Number of hits: " + hits.length());
-
-    Iterator<Hit> it = hits.iterator();
-    while (it.hasNext()) {
-      Hit hit = it.next();
-      Document document = hit.getDocument();
-      String path = document.get(FIELD_PATH);
-      System.out.println("Hit: " + path);
+    public void create_binary_file() throws IOException {
+        TextFileIndexer indexer  = new TextFileIndexer();
+        indexer.FIELD_CONTENTS = this.FIELD_CONTENTS;
+        indexer.FIELD_PATH = this.FIELD_PATH;
+        indexer.FILES_TO_INDEX_DIRECTORY = this.FILES_TO_INDEX_DIRECTORY;
+        indexer.INDEX_DIRECTORY = this.INDEX_DIRECTORY;
+        ObjectOutputStream myStream = new ObjectOutputStream(new FileOutputStream("index_lucene.bin"));
+        myStream.writeObject(indexer);
+        myStream.close();
     }
 
-  }
+    public static void main(String[] args) throws Exception {
+        TextFileIndexer index = new TextFileIndexer();
+        index.createIndex();
+        index.create_binary_file();
 
+    }
 }
