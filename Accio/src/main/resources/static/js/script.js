@@ -9,9 +9,11 @@ function query(){
                          data: {"myQuery": myQuery},
                          success: function (data) {
                                alert("yay");
+                               alert(data);
                          },
                          error: function (data) {
                                alert("oops");
+                               alert(data);
                          }
                      });
 

@@ -4,26 +4,38 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.lang.reflect.Array;
 import java.util.*;
 
 import org.tartarus.snowball.SnowballProgram;
 import org.tartarus.snowball.ext.SpanishStemmer;
 
+
+/*
+ * @author Gustavo Gonzalez
+ */
 public class QueryAnalyze {
 	
-	public HashMap<String, Map<String, Double>> index;
-	public HashMap<String, Double> idf;
-	public ObjectInputStream input;
-	public ObjectInputStream input2;
-	public Stemmer stemmer;
-	public SnowballProgram languaje;
-	public String[] currentQuery;
-	public Map<String, Double> queryIDF;
-	public HashMap<String,Double> sim;
-	public List<String> files = new ArrayList<String>();
-	private double[][] matrix;
+	/*
+	 * Atributos de la clase QueryAnalyze
+	 */
+	private HashMap<String, Map<String, Double>> index;		// Mapa contenedor del indice de la colecion (Wij de cada doc)
+	private HashMap<String, Double> idf; 					// Mapa contenedor del IDF de los términos de la colección
+	private ObjectInputStream input;						// ObjectInputStream del index 
+	private ObjectInputStream input2;						// ObjectInputStream del IDF de los terninos de la coleccion 
+	private Stemmer stemmer;								// Objeto que me permite hacer stemming a las palabras
+	private SnowballProgram languaje;						// Objeto que nos permite definir el lenguaje del stemming
+	private String[] currentQuery;  						// Arreglo contenedor de los terminos de la busqueda
+	private Map<String, Double> queryIDF; 					// Mapa contenedor del IDF del query actual
+	private HashMap<String,Double> sim; 					// Mapa contenedor del ranking de documentos encontrados
+	private List<String> files = new ArrayList<String>();	// Lista contenedora de los archivos encontrados
+	private double[][] matrix;								// Matriz contenedora del IDF de la busqueda, Wij del indice
 	
-	protected QueryAnalyze() throws IOException {
+	/*
+	 * Contructor de la clase
+	 * Inicializacion de los atributos
+	 */
+	public QueryAnalyze() throws IOException {
 		index = new HashMap<String, Map<String, Double>>();
 		sim = new HashMap<String, Double>();
 		idf = new HashMap<String, Double>();
@@ -43,16 +55,35 @@ public class QueryAnalyze {
 		}
 	}
 	
+	/*
+	 * Metodo que toma el query y le hace tokenize, salvandolo en una lista de strings
+	 */
 	 private String[] tokenize(String text){
 	        String terms[]=text.split("[^a-zA-Z0-9ñ]+");
 	        return terms;
 	 }
 	
-	public void stemmedQuery(String query){
+	 /*
+	  * Metodo principal de la clase encargada de ejecutar las demas funciones
+	  * @param query del usuario
+	  * @return ranking ordenado de mayor a menor, con los documentos mas relevantes (Usando IDF) 
+	  * @see LinkedHashMap
+	  */
+	public LinkedHashMap<String, Double> stemmedQuery(String query){
+		cleanQuery();
 		currentQuery =  tokenize(stemmer.analyzeQuery(query, languaje));
+		calculate_Query_IDF();
+		calculateDocsList();
+		generate_matrix();
+		//printMatrix();
+		generate_sim();
+		return sortHashMapByValues(sim);
 	}
 	
-	public void calculate_Query_IDF(){
+	/*
+	 * Metodo que calcula el IDF de una consulta (query)
+	 */
+	private void calculate_Query_IDF(){
 		for(String string: currentQuery){
 			if (!idf.containsKey(string)){ }
 			else{
@@ -61,7 +92,10 @@ public class QueryAnalyze {
 		}
 	}
 	
-	public void calculateDocsList(){
+	/*
+	 * Metodo que genera la lista de documentos encontrados
+	 */
+	private void calculateDocsList(){
 		Map<String, Double> n;
 		for (Map.Entry<String, Map <String, Double>> i : index.entrySet()){
 			 n = i.getValue();
@@ -73,13 +107,18 @@ public class QueryAnalyze {
 		}
 	}
 	
-	public void generate_matrix(){
+	/*
+	 * Metodo generador de la matriz de principal (IDF del query + Wij de cada documento)
+	 */
+	private void generate_matrix(){
 		matrix = new double[queryIDF.size()][files.size()+1];
 		Collection<Double> values = queryIDF.values();
 		Set<String> words = queryIDF.keySet();
+		// Primero, inicializo el IDF del query
 		for (int i = 0; i < (queryIDF.size()) ; i++){
 			matrix [i] [0] = (double) values.toArray()[i];
 		}
+		// Segundo, genero el Wij de cada documento 
 		for (int i = 0; i < (queryIDF.size()); i++){
 			String currentWord = (String) words.toArray()[i];
 			for (int j = 1; j <= (files.size()) ; j++){
@@ -95,7 +134,11 @@ public class QueryAnalyze {
 		}
 	}
 
-	public void generate_sim(){
+	/*
+	 * Metodo que calcula la funcion de similitud, al mismo tiempo que la raiz de la suma de los pesos de
+	 * cada documento
+	 */
+	private void generate_sim(){
 		double queryRoot =  calculate_query_root();
 		String currentFile;
 		double num, root, res;
@@ -103,22 +146,26 @@ public class QueryAnalyze {
 			currentFile = files.get(i); 
 			num = root = res = 0;
 			for (int j = 0; j < (queryIDF.size()); j++) {
+				// calculo de el numerador
 				double temp = matrix [j][0] * matrix[j][i+1]; 
-				double temp2 = matrix[j][i+1] * matrix[j][i+1];
 				num += temp;
+				// calculo de la raiz de los pesos
+				double temp2 = matrix[j][i+1] * matrix[j][i+1];
 				root += temp2;
 			}
 			root = Math.sqrt(root);
-			if (queryRoot == 0 || root ==0 ){
-				sim.put(currentFile, 0.0);
-			}
-			else{
+			// si la raiz de los pesos del query o del documento es 0, no lo tomo en cuenta
+			if (!(queryRoot == 0 || root ==0)){
 				res = (num / (queryRoot * root) );
 				sim.put(currentFile, res);
 			}
 		}	
 	}
 
+	/*
+	 * Metodo que calcula la raiz de la suma de los pesos del query
+	 * @return suma de los pesos del query
+	 */
 	private double calculate_query_root(){
 		double res = 0;
 		for (Map.Entry<String, Double> map : queryIDF.entrySet()){
@@ -130,27 +177,39 @@ public class QueryAnalyze {
 	
 
 	
-	public void printMatrix(){
+	/*private void printMatrix(){
 		for (int i = 0; i < matrix.length; i++) {
 		    for (int j = 0; j < matrix[0].length; j++) {
 		        System.out.print(matrix[i][j] + " ");
 		    }
 		    System.out.print("\n");
 		}
-	} 
+	} */
 	
-	public void cleanQuery(){
 	/*
-	 * falta
+	 * Metodo inicializador, que limpia los registros y estructuras de datos
+	 * antes de ser utilizadas, esto con el fin de evitar datos basura
 	 */
+	private void cleanQuery(){
+		currentQuery = null;
+		queryIDF.clear();
+		sim.clear();
+		files.clear();
 	}
 
 
+	/*
+	 * Metodo que ordena de mayor a menor el mapa contenedor del ranking de documentos, de acuerdo a su peso 
+	 * @param HashMap con los documentos como llave y pesos como valor
+	 * @return LinkedHashMap con sus elementos ordenados por valor
+	 * @see LinkedHashMap
+	 * @see HashMap
+	 */
 	private static LinkedHashMap<String, Double> sortHashMapByValues(HashMap<String, Double> passedMap) {
 		List<String> mapKeys = new ArrayList<>(passedMap.keySet());
 		List<Double> mapValues = new ArrayList<>(passedMap.values());
 		Collections.sort(mapValues,Collections.<Double>reverseOrder());
-		Collections.sort(mapKeys, Collections.<String>reverseOrder());
+        Collections.sort(mapKeys, Collections.<String>reverseOrder());
 		LinkedHashMap<String, Double> sortedMap = new LinkedHashMap<>();
 		Iterator<Double> valueIt = mapValues.iterator();
 		while (valueIt.hasNext()) {
@@ -170,17 +229,28 @@ public class QueryAnalyze {
 		return sortedMap;
 	}
 
+	public ArrayList<String> getRank (String myQuery){
+		LinkedHashMap<String, Double> hash = stemmedQuery(myQuery);
 
-	
+		ArrayList<String> result = new ArrayList<String> ();
+		for (Map.Entry<String, Double> it : hash.entrySet()){
+			result.add(it.getKey());
+		}
+
+		for (String i : result){
+			System.out.print(i);
+		}
+
+		return result;
+	}
+	/*
 	public static void main (String args[]) throws FileNotFoundException, ClassNotFoundException, IOException{
 		QueryAnalyze a = new QueryAnalyze();
-		a.stemmedQuery("potato quack gustavo");
-		a.calculate_Query_IDF();
-		a.calculateDocsList();
-		a.generate_matrix();
-		a.printMatrix();
-		a.generate_sim();
-		System.out.print(sortHashMapByValues(a.sim));
-		//System.out.println(a.sim);
-	}
+		//System.out.println(a.stemmedQuery("potato quack gustavo")+"\n");
+		//System.out.println(a.stemmedQuery("potato quak")+"\n");
+		//System.out.println(a.stemmedQuery("hola mi amigo")+"\n");
+		//System.out.println(a.stemmedQuery("kappa pogchamp kreygasm potato elefante")+"\n");
+		//System.out.println(a.stemmedQuery("andrew fields")+"\n");
+		a.getRank("potato quack gustavo");
+	}*/
 }
