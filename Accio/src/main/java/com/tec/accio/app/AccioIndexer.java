@@ -48,7 +48,7 @@ public class AccioIndexer {
             String line=" ";
             for(File filePath: files){
                 String fileContent = readOneFile(filePath);
-                documents_names.add(filePath.toString());
+                documents_names.add(filePath.getName());
                 documents_array.add(fileContent);
             }
 
